@@ -6,9 +6,6 @@ int main() {
         cout << "=== Operaciones basicas ===" << endl;
         Tensor A({2, 3}, {1, 2, 3, 4, 5, 6});
         Tensor B({2, 3}, {6, 5, 4, 3, 2, 1});
-        Tensor P = Tensor :: zeros({3,3});
-
-        P.printData();
 
         Tensor C = A + B;
         Tensor D = A - B;
