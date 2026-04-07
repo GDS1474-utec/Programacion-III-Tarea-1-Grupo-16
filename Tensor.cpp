@@ -3,6 +3,7 @@
 #include <random>
 #include <iomanip>
 
+// calcula tamaño total del tensor
 static size_t calculate_total_size(const vector<size_t>& shape) {
     if (shape.empty() || shape.size() > 3) {
         throw invalid_argument("Shape invalido");
@@ -18,8 +19,10 @@ static size_t calculate_total_size(const vector<size_t>& shape) {
     return total;
 }
 
+// constructor vacío
 Tensor::Tensor() : total_size(0), data(nullptr) {}
 
+// constructor con valores
 Tensor::Tensor(const vector<size_t>& shape, const vector<double>& values) {
     this->shape = shape;
     total_size = calculate_total_size(shape);
@@ -34,12 +37,14 @@ Tensor::Tensor(const vector<size_t>& shape, const vector<double>& values) {
     }
 }
 
+// constructor con puntero directo (sin copia)
 Tensor::Tensor(const vector<size_t>& shape, double* raw_data, size_t total_size) {
     this->shape = shape;
     this->total_size = total_size;
     this->data = raw_data;
 }
 
+// constructor copia (deep copy)
 Tensor::Tensor(const Tensor& other) {
     shape = other.shape;
     total_size = other.total_size;
@@ -50,6 +55,7 @@ Tensor::Tensor(const Tensor& other) {
     }
 }
 
+// operador asignación copia
 Tensor& Tensor::operator=(const Tensor& other) {
     if (this != &other) {
         delete[] data;
@@ -65,6 +71,7 @@ Tensor& Tensor::operator=(const Tensor& other) {
     return *this;
 }
 
+// constructor movimiento
 Tensor::Tensor(Tensor&& other) noexcept {
     shape = other.shape;
     total_size = other.total_size;
@@ -75,6 +82,7 @@ Tensor::Tensor(Tensor&& other) noexcept {
     other.shape.clear();
 }
 
+// operador asignación movimiento
 Tensor& Tensor::operator=(Tensor&& other) noexcept {
     if (this != &other) {
         delete[] data;
@@ -90,22 +98,26 @@ Tensor& Tensor::operator=(Tensor&& other) noexcept {
     return *this;
 }
 
+// destructor
 Tensor::~Tensor() {
     delete[] data;
 }
 
+// crea tensor de ceros
 Tensor Tensor::zeros(const vector<size_t>& shape) {
     size_t total = calculate_total_size(shape);
     vector<double> values(total, 0.0);
     return Tensor(shape, values);
 }
 
+// crea tensor de unos
 Tensor Tensor::ones(const vector<size_t>& shape) {
     size_t total = calculate_total_size(shape);
     vector<double> values(total, 1.0);
     return Tensor(shape, values);
 }
 
+// crea tensor aleatorio
 Tensor Tensor::random(const vector<size_t>& shape, double min, double max) {
     if (min >= max) {
         throw invalid_argument("Rango invalido para random");
@@ -125,6 +137,7 @@ Tensor Tensor::random(const vector<size_t>& shape, double min, double max) {
     return Tensor(shape, values);
 }
 
+// crea tensor secuencial
 Tensor Tensor::arange(int start, int end) {
     if (start >= end) {
         throw invalid_argument("Rango invalido en arange");
@@ -139,6 +152,7 @@ Tensor Tensor::arange(int start, int end) {
     return Tensor(shape, values);
 }
 
+// concatena tensores
 Tensor Tensor::concat(const vector<Tensor>& tensors, size_t dim) {
     if (tensors.empty()) {
         throw invalid_argument("No hay tensores para concatenar");
@@ -178,10 +192,12 @@ Tensor Tensor::concat(const vector<Tensor>& tensors, size_t dim) {
     return Tensor(new_shape, new_data, total);
 }
 
+// aplica transformación (polimorfismo)
 Tensor Tensor::apply(const TensorTransform& transform) const {
     return transform.apply(*this);
 }
 
+// cambia forma sin copiar (move)
 Tensor Tensor::view(const vector<size_t>& new_shape) {
     size_t new_total = calculate_total_size(new_shape);
     if (new_total != total_size) {
@@ -195,6 +211,7 @@ Tensor Tensor::view(const vector<size_t>& new_shape) {
     return result;
 }
 
+// agrega dimensión de tamaño 1
 Tensor Tensor::unsqueeze(size_t dim) {
     if (shape.size() >= 3) {
         throw invalid_argument("unsqueeze excede el maximo de 3 dimensiones");
@@ -213,6 +230,7 @@ Tensor Tensor::unsqueeze(size_t dim) {
     return result;
 }
 
+// getters
 const vector<size_t>& Tensor::getShape() const {
     return shape;
 }
@@ -225,6 +243,7 @@ size_t Tensor::getTotalSize() const {
     return total_size;
 }
 
+// suma de tensores
 Tensor Tensor::operator+(const Tensor& other) const {
     vector<double> values;
 
@@ -256,6 +275,7 @@ Tensor Tensor::operator+(const Tensor& other) const {
     throw invalid_argument("Dimensiones incompatibles para suma");
 }
 
+// resta elemento a elemento
 Tensor Tensor::operator-(const Tensor& other) const {
     if (shape != other.shape) {
         throw invalid_argument("Dimensiones incompatibles");
@@ -269,6 +289,7 @@ Tensor Tensor::operator-(const Tensor& other) const {
     return Tensor(shape, values);
 }
 
+// multiplicación elemento a elemento
 Tensor Tensor::operator*(const Tensor& other) const {
     if (shape != other.shape) {
         throw invalid_argument("Dimensiones incompatibles");
@@ -282,6 +303,7 @@ Tensor Tensor::operator*(const Tensor& other) const {
     return Tensor(shape, values);
 }
 
+// multiplicación por escalar
 Tensor Tensor::operator*(double scalar) const {
     vector<double> values;
     for (size_t i = 0; i < total_size; i++) {
@@ -291,6 +313,7 @@ Tensor Tensor::operator*(double scalar) const {
     return Tensor(shape, values);
 }
 
+// imprime dimensiones
 void Tensor::printShape() const {
     cout << "shape = {";
     for (size_t i = 0; i < shape.size(); i++) {
@@ -300,12 +323,14 @@ void Tensor::printShape() const {
     cout << "}" << endl;
 }
 
+// impresión recursiva del tensor
 void Tensor::printRecursive(size_t dimension, size_t& IDnumero) const {
     cout << "[";
 
     size_t contador = shape[dimension];
 
     if (dimension == shape.size() - 1) {
+        //caso final
         for (size_t i = 0; i < contador; i++) {
             cout << data[IDnumero++];
             if (i + 1 < contador) cout << ", ";
@@ -313,6 +338,7 @@ void Tensor::printRecursive(size_t dimension, size_t& IDnumero) const {
 
     } else {
         for (size_t i = 0; i < contador; i++) {
+            //recursiva
             printRecursive(dimension + 1, IDnumero);
             if (i + 1 < contador) cout << ", ";
         }
@@ -321,13 +347,14 @@ void Tensor::printRecursive(size_t dimension, size_t& IDnumero) const {
     cout << "]";
 }
 
-
+// inicia impresión
 void Tensor::printData() const {
     size_t IDnumero = 0;
     printRecursive(0, IDnumero);
     cout << endl;
 }
 
+// producto punto
 Tensor dot(const Tensor& a, const Tensor& b) {
     if (a.shape != b.shape) {
         throw invalid_argument("Dimensiones incompatibles para dot");
@@ -341,6 +368,7 @@ Tensor dot(const Tensor& a, const Tensor& b) {
     return Tensor({1}, {sum});
 }
 
+// multiplicación matricial
 Tensor matmul(const Tensor& a, const Tensor& b) {
     if (a.shape.size() != 2 || b.shape.size() != 2) {
         throw invalid_argument("matmul solo acepta tensores 2D");
